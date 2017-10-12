@@ -1,4 +1,13 @@
 import numpy as np
+import scipy.linalg as la
+from scipy.misc import comb
+def cycle(n, index):
+
+    array = np.arange(1, n + 1)
+
+    index =  np.mod((index -1),n)
+
+    return array[int(index)]
 
 # specific
 
@@ -87,11 +96,12 @@ def rotz(*args):
     rot_max = np.array([ct,-st,0,st,ct,0,0,0,1]).reshape((3,3))
 
     if len(args) == 1:
+
         return rot_max
 
     if len(args) == 2:
-        return np.dot(rot_max, v)
 
+        return np.dot(rot_max, v)
 
 # general subr
 
@@ -132,12 +142,10 @@ def dimAxis(dim):
 
 # general
 
-def rotationMatrixMainAxis(theta,*args):
+def rotationMatrixMainAxis(theta,dim,*args):
 
 
     axis = args[0]
-
-    dim = len(axis)
 
     if len(args) == 1:
 
@@ -145,7 +153,7 @@ def rotationMatrixMainAxis(theta,*args):
 
     elif len(args) == 2:
 
-        towards = args[2]
+        towards = args[1]
 
     else:
         exit()
@@ -185,14 +193,14 @@ def rotationMatrixGeneral(theta,v0,n):
 
             k = k + 1
 
-            Mk = rotationMatrixMain(np.arctan2(vk[r,c],vk[r,c-1]),c,c-1)
+            Mk = rotationMatrixMainAxis(np.arctan2(vk[r,c],vk[r,c-1]),c,c-1)
 
             vk = vk @ Mk
 
             M = M @ Mk
 
 
-    M = M @ rotationMatrixMain(theta,n-1,n) @ la.inv(M)
+    M = M @ rotationMatrixMainAxis(theta,n-1,n) @ la.inv(M)
 
     return M
 
