@@ -1,13 +1,6 @@
 import numpy as np
 import scipy.linalg as la
 from scipy.misc import comb
-def cycle(n, index):
-
-    array = np.arange(1, n + 1)
-
-    index =  np.mod((index -1),n)
-
-    return array[int(index)]
 
 # specific
 
@@ -21,10 +14,11 @@ def rot2(*args):
         theta = args[1]
 
     else:
-        assert len(args) !=1 or len(args) !=2, 'must have one or two arguments'
+        assert len(args) != 1 or len(args) !=2, 'must have one or two arguments'
 
     ct = np.cos(theta)
     st = np.sin(theta)
+
     rot_mat = np.array([ct,-st,st,ct]).reshape((2,2))
 
     if len(args) == 1:
@@ -105,40 +99,51 @@ def rotz(*args):
 
 # general subr
 
+def cycle(n, index):
+
+    array = np.arange(1, n + 1)
+
+    index =  np.mod((index -1),n)
+
+    return array[int(index)]
+
+def dofb(dim):
+
+    return dim * (dim - 1) / 2
+
+def dofc(dim):
+
+    return 2 ** dim / 2 - 1
+
 def v0(points):
 
     return np.vstack(points)
 
 def T(d):
 
-   t =  np.eye(d,d)
+   dim = len(d)
 
-   t[-1,:-1] = d
+   t =  np.eye(dim,dim)
 
-def vk(v0,k):
+   t[-1] = d
 
-    vk = v0
-
-    for i in np.arange(1,k+1):
-
-        vk = vk* Mk(i)
-
-    return vk
-
-def Mk(v0,k,j):
-
-    gt = generalTheta(v0,k,j)
-
-    rotationMatrixMain(gt,j,j-1)
+   return t
 
 def mainPlanes(dim):
+
+    # Returns the number main planes
+
     return comb(dim, 2)
 
 def numTowards(dim):
-    pass
 
-def dimAxis(dim):
-    return dim - 2
+    return dim-1
+
+def dimAxis(ndim):
+
+# Returns the dimension of a rotation 'axis' in a ndim dimentional space
+
+    return ndim - 2
 
 # general
 
@@ -149,7 +154,7 @@ def rotationMatrixMainAxis(theta,dim,*args):
 
     if len(args) == 1:
 
-        towards = cycle(mainPlanes(dim),axis+1)
+        towards = int(cycle(dim,axis+1))
 
     elif len(args) == 2:
 
@@ -164,22 +169,26 @@ def rotationMatrixMainAxis(theta,dim,*args):
 
     r = np.eye(dim, dim)
 
-    r[axis,axis] = c
+    axisIndex = axis-1
 
-    r[towards,towards] = c
+    towardsIndex = towards -1
 
-    r[axis,towards] = -1*s
+    r[axis-1,axis-1] = c
 
-    r[towards,axis] = s
+    r[towards-1,towards-1] = c
+
+    r[axis-1,towards-1] = -1*s
+
+    r[towards-1,axis-1] = s
 
     return r
 
 
 def rotationMatrixGeneral(theta,v0,n):
 
-    M1 = T(-v0[0])
+    M1 = T(-1*v0[0])
 
-    v1 = v0 * M1
+    v1 = v0 @ M1
 
     M = M1
 
@@ -187,13 +196,15 @@ def rotationMatrixGeneral(theta,v0,n):
 
     k = 1
 
-    for r in np.arange(1,n):
+    for r in range(1,n):
 
-        for c in np.arange(n-1,r,-1):
+        for c in np.arange(n-1,r-1,-1):
 
             k = k + 1
 
-            Mk = rotationMatrixMainAxis(np.arctan2(vk[r,c],vk[r,c-1]),c,c-1)
+            theta = np.arctan2(vk[r,c],vk[r,c-1])
+
+            Mk = rotationMatrixMainAxis(theta,len(v0[0]),c,c-1)
 
             vk = vk @ Mk
 
@@ -206,5 +217,6 @@ def rotationMatrixGeneral(theta,v0,n):
 
 
 
-def rot(*args,**kwargs):
-    pass
+
+print(rotationMatrixGeneral(0.5,v0(([0,0,0],[0,0,1])),3))
+
